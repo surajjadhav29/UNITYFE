@@ -1,0 +1,46 @@
+.bar {
+  background: var(--color-navy);
+  color: #ffffff;
+}
+
+.stats {
+  list-style: none;
+  margin: 0;
+  padding: 1.6rem 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  text-align: center;
+  gap: 1rem;
+}
+
+.stats strong {
+  display: block;
+  color: #f2c200;
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.stats span {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .stats {
+    gap: 0.5rem;
+    padding: 1.25rem 0;
+  }
+
+  .stats strong {
+    font-size: 1.35rem;
+  }
+
+  .stats span {
+    font-size: 0.78rem;
+  }
+}

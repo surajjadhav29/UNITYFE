@@ -1,0 +1,25 @@
+:root {
+  --color-navy: #0c3170;
+  --color-navy-mid: #154592;
+  --color-navy-soft: #1d4fa3;
+  --color-accent: #0349ab;
+  --color-accent-hover: #023886;
+  --color-accent-soft: #e8f1fc;
+  --color-white: #ffffff;
+  --color-bg: #f5f6f8;
+  --color-text: #16202c;
+  --color-muted: #5c6778;
+  --color-border: #e3e7ee;
+  --color-card: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(15, 28, 46, 0.06);
+  --shadow-md: 0 10px 30px rgba(15, 28, 46, 0.08);
+  --shadow-header: 0 1px 0 rgba(15, 28, 46, 0.08);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --container: 1180px;
+  --header-height: 76px;
+  --font-heading: 'Outfit', 'Segoe UI', sans-serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', sans-serif;
+  --transition: 180ms ease;
+}

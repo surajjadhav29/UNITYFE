@@ -1,0 +1,114 @@
+.section {
+  padding: 1rem 0 3.2rem;
+  background: var(--color-white);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.8rem;
+}
+
+.top h2,
+.card h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.8rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chips a {
+  border: 1px solid var(--color-border);
+  background: #f7f9fc;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-navy-mid);
+}
+
+.chips a:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1.2rem;
+}
+
+.card,
+.mapWrap {
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.card {
+  padding: 1.4rem;
+}
+
+.card p,
+.card li {
+  color: var(--color-muted);
+}
+
+.card ul {
+  margin: 0.9rem 0 1.1rem;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.card a {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.browse {
+  display: inline-flex;
+  background: var(--color-accent);
+  color: var(--color-white) !important;
+  border-radius: 999px;
+  padding: 0.7rem 1.15rem;
+}
+
+.mapWrap {
+  overflow: hidden;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mapLabel {
+  padding: 0.85rem 1rem 0;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.mapWrap iframe {
+  border: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 260px;
+}
+
+.mapWrap > a {
+  padding: 0.75rem 1rem 0.9rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+@media (max-width: 860px) {
+  .top,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
