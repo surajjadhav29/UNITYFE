@@ -7,11 +7,13 @@ import { ContactPage } from './pages/ContactPage';
 import { BuyPage } from './pages/BuyPage';
 import { HomePage } from './pages/HomePage';
 import { SellPage } from './pages/SellPage';
+import { AdminApp } from './crm/AdminApp';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/admin/*" element={<AdminApp />} />
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="buy" element={<BuyPage />} />
