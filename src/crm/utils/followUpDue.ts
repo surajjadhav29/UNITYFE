@@ -18,7 +18,11 @@ export function isOverdue(iso: string, now = new Date()): boolean {
 }
 
 export function isHotPriority(priority: Lead['priority']): boolean {
-  return priority === 'Urgent' || priority === 'High';
+  return priority === 'Hot';
+}
+
+export function isWarmOrHot(priority: Lead['priority']): boolean {
+  return priority === 'Hot' || priority === 'Warm';
 }
 
 export interface DueFollowUpItem {
@@ -30,16 +34,17 @@ export interface DueFollowUpItem {
 export function getDueFollowUpsForLeads(
   followUps: FollowUp[],
   leads: Lead[],
-  userId: string | undefined,
+  userId?: string,
   now = new Date(),
 ): DueFollowUpItem[] {
   const leadMap = new Map(leads.map((l) => [l.id, l]));
   return followUps
-    .filter((f) => f.status === 'Scheduled')
+    .filter((f) => f.status === 'Pending')
     .filter((f) => !userId || f.assignedStaffId === userId)
     .map((followUp) => {
       const lead = leadMap.get(followUp.leadId);
       if (!lead) return null;
+      if (lead.status === 'Won' || lead.status === 'Lost') return null;
       const kind = isOverdue(followUp.scheduledAt, now)
         ? 'overdue'
         : isToday(followUp.scheduledAt, now)

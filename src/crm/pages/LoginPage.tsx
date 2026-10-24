@@ -5,7 +5,7 @@ import '../styles/crm.css';
 import '../styles/crm-polish.css';
 
 export function LoginPage() {
-  const { login, currentUser } = useCrm();
+  const { login, currentUser, resetData } = useCrm();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/admin/dashboard';
@@ -28,10 +28,17 @@ export function LoginPage() {
     navigate(from, { replace: true });
   }
 
+  function loadShowcaseData() {
+    resetData();
+    setError('');
+    setEmail('admin@unityauto.com');
+    setPassword('admin123');
+  }
+
   return (
     <div className="crm-root crm-login-shell">
       <div className="crm-login-card">
-        <div className="crm-login-brand">Unity Auto CRM</div>
+        <div className="crm-login-brand">DriveNext CRM</div>
         <p className="crm-login-sub">Sign in to manage leads, follow-ups, and stock.</p>
         {error ? <div className="crm-alert crm-alert-error">{error}</div> : null}
         <form className="crm-form" onSubmit={onSubmit}>
@@ -61,10 +68,17 @@ export function LoginPage() {
             Sign in
           </button>
         </form>
+        <button
+          type="button"
+          className="crm-btn crm-btn-secondary"
+          style={{ width: '100%', marginTop: '0.75rem' }}
+          onClick={loadShowcaseData}
+        >
+          Load showcase dashboard data
+        </button>
         <p className="crm-login-sub" style={{ marginTop: '1.25rem', marginBottom: 0 }}>
-          Demo — Admin: <strong>admin@unityauto.com</strong> / admin123 · Sales:{' '}
-          <strong>rahul@unityauto.com</strong> / staff123 · Staff:{' '}
-          <strong>priya@unityauto.com</strong> / staff123
+          Showcase admin: <strong>Rohit Sharma</strong> · <strong>admin@unityauto.com</strong> /{' '}
+          admin123
         </p>
         <p style={{ marginTop: '0.75rem', fontSize: '0.88rem' }}>
           <Link to="/" className="crm-link">

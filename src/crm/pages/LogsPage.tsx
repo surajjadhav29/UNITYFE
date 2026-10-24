@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { CrmTable } from '../common/components/CrmTable';
 import { useCrm } from '../context/CrmContext';
 
 export function LogsPage() {
@@ -42,8 +43,7 @@ export function LogsPage() {
         />
       </div>
 
-      <div className="crm-table-wrap">
-        <table className="crm-table">
+      <CrmTable stickyHeader>
           <thead>
             <tr>
               <th>Time</th>
@@ -66,9 +66,8 @@ export function LogsPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+      </CrmTable>
         {logs.length === 0 ? <p className="crm-empty">No log entries.</p> : null}
-      </div>
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { CrmProvider } from './context/CrmContext';
 import { AdminLayout } from './layout/AdminLayout';
-import { RequireAdmin, RequireAuth } from './components/RequireAuth';
+import { RequireAdmin, RequireAuth, RequireReports } from './components/RequireAuth';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LeadsPage } from './pages/LeadsPage';
@@ -14,6 +14,9 @@ import { LogsPage } from './pages/LogsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { FollowUpsPage } from './pages/FollowUpsPage';
 import { ImportLeadsPage } from './pages/ImportLeadsPage';
+import { AppointmentsPage } from './pages/AppointmentsPage';
+import { BookingsPage } from './pages/BookingsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export function AdminApp() {
   return (
@@ -29,15 +32,26 @@ export function AdminApp() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="follow-ups" element={<FollowUpsPage />} />
           <Route path="leads" element={<LeadsPage />} />
           <Route path="leads/import" element={<ImportLeadsPage />} />
           <Route path="leads/new" element={<LeadFormPage />} />
           <Route path="leads/:id" element={<LeadDetailPage />} />
           <Route path="leads/:id/edit" element={<LeadFormPage />} />
+          <Route path="follow-ups" element={<FollowUpsPage />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
           <Route path="vehicles" element={<VehiclesPage />} />
           <Route path="vehicles/new" element={<VehicleFormPage />} />
           <Route path="vehicles/:id/edit" element={<VehicleFormPage />} />
+          <Route path="bookings" element={<BookingsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route
+            path="reports"
+            element={
+              <RequireReports>
+                <ReportsPage />
+              </RequireReports>
+            }
+          />
           <Route
             path="users"
             element={
@@ -51,14 +65,6 @@ export function AdminApp() {
             element={
               <RequireAdmin>
                 <LogsPage />
-              </RequireAdmin>
-            }
-          />
-          <Route
-            path="reports"
-            element={
-              <RequireAdmin>
-                <ReportsPage />
               </RequireAdmin>
             }
           />

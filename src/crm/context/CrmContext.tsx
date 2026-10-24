@@ -7,7 +7,10 @@ import {
   type ReactNode,
 } from 'react';
 import type {
+  Appointment,
+  Booking,
   CrmPersistedState,
+  CrmSettings,
   CrmUser,
   FollowUp,
   FollowUpType,
@@ -24,7 +27,13 @@ import {
   saveState,
 } from '../storage/persistence';
 import { formatLeadNumber, newId } from '../utils/ids';
-import { filterLeadsForUser } from '../utils/permissions';
+import { canReserveVehicle } from '../utils/bookingRules';
+import {
+  canManageBookings,
+  canManageSettings,
+  filterLeadsForUser,
+  isTeamLead,
+} from '../utils/permissions';
 
 type LeadInput = Omit<
   Lead,
@@ -48,6 +57,12 @@ export interface LogContactInput {
   completeScheduledFollowUpId?: string;
   setInterestedVehicleId?: string;
   markContacted?: boolean;
+  /** Update priority from call outcome */
+  priority?: Lead['priority'];
+  budget?: number;
+  lostReason?: Lead['lostReason'];
+  /** Stop all future call reminders (already purchased / do not call) */
+  stopFollowUps?: boolean;
 }
 
 interface CrmContextValue {
@@ -76,9 +91,29 @@ interface CrmContextValue {
   updateVehicle: (id: string, patch: Partial<VehicleInput>) => StockVehicle | null;
   createUser: (input: UserInput) => CrmUser | { error: string };
   updateUser: (id: string, patch: Partial<UserInput>) => CrmUser | { error: string };
+  deleteUser: (id: string) => { ok: true } | { ok: false; error: string };
   findDuplicateMobile: (mobile: string, excludeLeadId?: string) => Lead | undefined;
   bulkAssignLeads: (leadIds: string[], staffId: string | null) => { ok: true } | { ok: false; error: string };
   deleteLeads: (leadIds: string[]) => { ok: true } | { ok: false; error: string };
+  visibleAppointments: Appointment[];
+  visibleBookings: Booking[];
+  createAppointment: (
+    input: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'createdById'>,
+  ) => Appointment | { error: string };
+  updateAppointment: (
+    id: string,
+    patch: Partial<Omit<Appointment, 'id' | 'createdById' | 'createdAt'>>,
+  ) => Appointment | { error: string };
+  createBooking: (
+    input: Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'createdById' | 'status'> & {
+      status?: Booking['status'];
+    },
+  ) => Booking | { error: string };
+  updateBooking: (
+    id: string,
+    patch: Partial<Omit<Booking, 'id' | 'createdById' | 'createdAt'>>,
+  ) => Booking | { error: string };
+  updateSettings: (patch: Partial<CrmSettings>) => { ok: true } | { ok: false; error: string };
 }
 
 const CrmContext = createContext<CrmContextValue | null>(null);
@@ -119,6 +154,18 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     () => filterLeadsForUser(currentUser, state.leads),
     [currentUser, state.leads],
   );
+
+  const visibleAppointments = useMemo(() => {
+    if (!currentUser || currentUser.status !== 'active') return [];
+    if (isTeamLead(currentUser)) return state.appointments;
+    return state.appointments.filter((a) => a.assignedStaffId === currentUser.id);
+  }, [currentUser, state.appointments]);
+
+  const visibleBookings = useMemo(() => {
+    if (!currentUser || currentUser.status !== 'active') return [];
+    if (isTeamLead(currentUser)) return state.bookings;
+    return state.bookings.filter((b) => b.assignedStaffId === currentUser.id);
+  }, [currentUser, state.bookings]);
 
   const getUserById = useCallback(
     (id: string | null | undefined) => (id ? state.users.find((u) => u.id === id) : undefined),
@@ -264,6 +311,13 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       if (nextStatus === 'Lost' && !lostReason) {
         return { error: 'Select a lost reason before marking Lost.' };
       }
+      const onHoldReason = patch.onHoldReason ?? existing.onHoldReason;
+      if (nextStatus === 'On Hold' && !onHoldReason?.trim()) {
+        return { error: 'Add a reason before putting the lead on hold.' };
+      }
+      if (nextStatus === 'Won' && !existing.bookingId && !patch.bookingId) {
+        return { error: 'Complete a booking/sale before marking Won.' };
+      }
       if (
         patch.mobile &&
         normalizeMobile(patch.mobile) !== normalizeMobile(existing.mobile)
@@ -292,6 +346,18 @@ export function CrmProvider({ children }: { children: ReactNode }) {
           title: 'Status updated',
           detail: `${existing.status} → ${patch.status}`,
           meta: { from: existing.status, to: patch.status },
+          createdAt: now,
+        });
+      }
+      if (patch.priority && patch.priority !== existing.priority) {
+        activities.unshift({
+          id: newId('act'),
+          leadId: id,
+          actorId: currentUser.id,
+          type: 'lead_updated',
+          title: 'Priority updated',
+          detail: `${existing.priority} → ${patch.priority}`,
+          meta: { from: existing.priority, to: patch.priority },
           createdAt: now,
         });
       }
@@ -343,7 +409,8 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       const followUp: FollowUp = {
         ...input,
         id: newId('fu'),
-        status: input.status ?? 'Scheduled',
+        status: input.status ?? 'Pending',
+        createdById: currentUser.id,
         createdAt: now,
         updatedAt: now,
       };
@@ -412,8 +479,11 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       const existing = state.leads.find((l) => l.id === input.leadId);
       if (!existing) return { ok: false, error: 'Lead not found.' };
 
-      if (input.newStatus === 'Lost' && !existing.lostReason) {
-        return { ok: false, error: 'Set lost reason on edit before marking Lost.' };
+      if (
+        input.newStatus === 'Lost' &&
+        !(input.lostReason || existing.lostReason)
+      ) {
+        return { ok: false, error: 'Select a reason when marking Lost / do not call.' };
       }
 
       const now = new Date().toISOString();
@@ -479,7 +549,28 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       }
 
       let nextFollowUpAt = existing.nextFollowUpAt;
-      if (input.nextFollowUpAt) {
+      if (input.stopFollowUps) {
+        followUps = followUps.map((f) =>
+          f.leadId === input.leadId && f.status === 'Pending'
+            ? {
+                ...f,
+                status: 'Cancelled' as const,
+                outcome: response,
+                updatedAt: now,
+              }
+            : f,
+        );
+        nextFollowUpAt = undefined;
+        activities.unshift({
+          id: newId('act'),
+          leadId: input.leadId,
+          actorId: currentUser.id,
+          type: 'follow_up',
+          title: 'Follow-ups stopped',
+          detail: 'No further call reminders for this lead.',
+          createdAt: now,
+        });
+      } else if (input.nextFollowUpAt) {
         const fuType = input.nextFollowUpType ?? input.contactType;
         const followUp: FollowUp = {
           id: newId('fu'),
@@ -487,8 +578,9 @@ export function CrmProvider({ children }: { children: ReactNode }) {
           scheduledAt: input.nextFollowUpAt,
           type: fuType,
           assignedStaffId: ownerId ?? currentUser.id,
-          notes: `Reminder after ${input.contactType.toLowerCase()}`,
-          status: 'Scheduled',
+          notes: `Reminder after ${input.contactType.toLowerCase()}: ${response.slice(0, 120)}`,
+          status: 'Pending',
+          createdById: currentUser.id,
           createdAt: now,
           updatedAt: now,
         };
@@ -508,7 +600,7 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       let status = existing.status;
       if (input.newStatus) {
         status = input.newStatus;
-      } else if (existing.status === 'New Lead' && input.markContacted !== false) {
+      } else if (existing.status === 'New' && input.markContacted !== false) {
         status = 'Contacted';
         activities.unshift({
           id: newId('act'),
@@ -516,7 +608,19 @@ export function CrmProvider({ children }: { children: ReactNode }) {
           actorId: currentUser.id,
           type: 'status_change',
           title: 'Status updated',
-          detail: 'New Lead → Contacted',
+          detail: 'New → Contacted',
+          createdAt: now,
+        });
+      }
+
+      if (input.priority && input.priority !== existing.priority) {
+        activities.unshift({
+          id: newId('act'),
+          leadId: input.leadId,
+          actorId: currentUser.id,
+          type: 'lead_updated',
+          title: 'Priority updated',
+          detail: `${existing.priority} → ${input.priority}`,
           createdAt: now,
         });
       }
@@ -529,6 +633,15 @@ export function CrmProvider({ children }: { children: ReactNode }) {
         updatedAt: now,
         nextFollowUpAt,
         interestedVehicleId: input.setInterestedVehicleId ?? existing.interestedVehicleId,
+        priority: input.priority ?? existing.priority,
+        budget: input.budget !== undefined ? input.budget : existing.budget,
+        lostReason:
+          status === 'Lost'
+            ? (input.lostReason ?? existing.lostReason ?? 'Other')
+            : existing.lostReason,
+        remarks: response
+          ? [existing.remarks, response].filter(Boolean).join('\n—\n')
+          : existing.remarks,
       };
 
       persist({
@@ -626,8 +739,8 @@ export function CrmProvider({ children }: { children: ReactNode }) {
 
   const bulkAssignLeads = useCallback(
     (leadIds: string[], staffId: string | null): { ok: true } | { ok: false; error: string } => {
-      if (!currentUser || currentUser.role !== 'admin') {
-        return { ok: false, error: 'Only admins can bulk assign.' };
+      if (!currentUser || !isTeamLead(currentUser)) {
+        return { ok: false, error: 'Only admins or managers can bulk assign.' };
       }
       if (leadIds.length === 0) return { ok: false, error: 'No leads selected.' };
       const now = new Date().toISOString();
@@ -689,6 +802,257 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     [currentUser, persist, state],
   );
 
+  const createAppointment = useCallback(
+    (
+      input: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'createdById'>,
+    ): Appointment | { error: string } => {
+      if (!currentUser) return { error: 'Not signed in.' };
+      const lead = state.leads.find((l) => l.id === input.leadId);
+      if (!lead) return { error: 'Lead not found.' };
+      if (lead.status === 'Won' || lead.status === 'Lost') {
+        return { error: 'Cannot schedule appointments for closed leads.' };
+      }
+      const duplicate = state.appointments.find(
+        (a) =>
+          a.leadId === input.leadId &&
+          a.scheduledAt === input.scheduledAt &&
+          !['Cancelled', 'No-show'].includes(a.status),
+      );
+      if (duplicate) return { error: 'An appointment already exists at this time for this lead.' };
+      const now = new Date().toISOString();
+      const appointment: Appointment = {
+        ...input,
+        id: newId('appt'),
+        createdById: currentUser.id,
+        createdAt: now,
+        updatedAt: now,
+      };
+      persist({
+        ...state,
+        appointments: [appointment, ...state.appointments],
+        leads: state.leads.map((l) =>
+          l.id === input.leadId && l.status === 'Qualified'
+            ? { ...l, status: 'Visit/Test Drive Scheduled' as LeadStatus, updatedAt: now }
+            : l.id === input.leadId
+              ? { ...l, updatedAt: now }
+              : l,
+        ),
+        activities: [
+          {
+            id: newId('act'),
+            leadId: input.leadId,
+            actorId: currentUser.id,
+            type: 'appointment',
+            title: `${input.type} scheduled`,
+            detail: new Date(input.scheduledAt).toLocaleString('en-IN'),
+            createdAt: now,
+          },
+          ...state.activities,
+        ],
+        auditLogs: appendAudit(state, {
+          actorId: currentUser.id,
+          action: 'appointment_created',
+          recordType: 'appointment',
+          recordId: appointment.id,
+        }),
+      });
+      return appointment;
+    },
+    [currentUser, persist, state],
+  );
+
+  const updateAppointment = useCallback(
+    (
+      id: string,
+      patch: Partial<Omit<Appointment, 'id' | 'createdById' | 'createdAt'>>,
+    ): Appointment | { error: string } => {
+      if (!currentUser) return { error: 'Not signed in.' };
+      const existing = state.appointments.find((a) => a.id === id);
+      if (!existing) return { error: 'Appointment not found.' };
+      const now = new Date().toISOString();
+      const updated = { ...existing, ...patch, updatedAt: now };
+      let leads = state.leads;
+      if (patch.status === 'Completed' && existing.leadId) {
+        leads = state.leads.map((l) =>
+          l.id === existing.leadId && l.status === 'Visit/Test Drive Scheduled'
+            ? { ...l, status: 'Test Drive Completed' as LeadStatus, updatedAt: now }
+            : l.id === existing.leadId
+              ? { ...l, updatedAt: now }
+              : l,
+        );
+      }
+      persist({
+        ...state,
+        appointments: state.appointments.map((a) => (a.id === id ? updated : a)),
+        leads,
+        auditLogs: appendAudit(state, {
+          actorId: currentUser.id,
+          action: 'appointment_updated',
+          recordType: 'appointment',
+          recordId: id,
+          detail: patch.status,
+        }),
+      });
+      return updated;
+    },
+    [currentUser, persist, state],
+  );
+
+  const createBooking = useCallback(
+    (
+      input: Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'createdById' | 'status'> & {
+        status?: Booking['status'];
+      },
+    ): Booking | { error: string } => {
+      if (!currentUser || !canManageBookings(currentUser)) {
+        return { error: 'You cannot create bookings.' };
+      }
+      const lead = state.leads.find((l) => l.id === input.leadId);
+      const vehicle = state.vehicles.find((v) => v.id === input.vehicleId);
+      if (!lead) return { error: 'Lead not found.' };
+      if (!vehicle) return { error: 'Vehicle not found.' };
+      if (lead.status === 'Won' || lead.status === 'Lost') {
+        return { error: 'Lead is already closed.' };
+      }
+      const reserveCheck = canReserveVehicle(vehicle, state.bookings);
+      if (!reserveCheck.ok) return { error: reserveCheck.reason };
+      const now = new Date().toISOString();
+      const status = input.status ?? 'Booked';
+      const booking: Booking = {
+        ...input,
+        status,
+        id: newId('bkg'),
+        createdById: currentUser.id,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const vehicleAvailability =
+        status === 'Sold/Delivered' ? 'Sold' : ('Reserved' as StockVehicle['availability']);
+      const leadStatus: LeadStatus =
+        status === 'Sold/Delivered' ? 'Won' : 'Booking';
+      persist({
+        ...state,
+        bookings: [booking, ...state.bookings],
+        vehicles: state.vehicles.map((v) =>
+          v.id === input.vehicleId
+            ? { ...v, availability: vehicleAvailability, updatedAt: now }
+            : v,
+        ),
+        leads: state.leads.map((l) =>
+          l.id === input.leadId
+            ? { ...l, status: leadStatus, bookingId: booking.id, updatedAt: now }
+            : l,
+        ),
+        followUps: state.followUps.map((f) =>
+          f.leadId === input.leadId && f.status === 'Pending'
+            ? { ...f, status: 'Cancelled' as const, updatedAt: now }
+            : f,
+        ),
+        activities: [
+          {
+            id: newId('act'),
+            leadId: input.leadId,
+            actorId: currentUser.id,
+            type: 'booking',
+            title: 'Booking recorded',
+            detail: `${vehicle.brand} ${vehicle.model} · ${status}`,
+            createdAt: now,
+          },
+          ...state.activities,
+        ],
+        auditLogs: appendAudit(state, {
+          actorId: currentUser.id,
+          action: 'booking_created',
+          recordType: 'booking',
+          recordId: booking.id,
+        }),
+      });
+      return booking;
+    },
+    [currentUser, persist, state],
+  );
+
+  const updateBooking = useCallback(
+    (
+      id: string,
+      patch: Partial<Omit<Booking, 'id' | 'createdById' | 'createdAt'>>,
+    ): Booking | { error: string } => {
+      if (!currentUser || !canManageBookings(currentUser)) {
+        return { error: 'You cannot update bookings.' };
+      }
+      const existing = state.bookings.find((b) => b.id === id);
+      if (!existing) return { error: 'Booking not found.' };
+      const now = new Date().toISOString();
+      const nextStatus = patch.status ?? existing.status;
+      const vehicle = state.vehicles.find((v) => v.id === existing.vehicleId);
+      let vehicles = state.vehicles;
+      let leads = state.leads;
+      if (nextStatus === 'Sold/Delivered') {
+        vehicles = state.vehicles.map((v) =>
+          v.id === existing.vehicleId ? { ...v, availability: 'Sold', updatedAt: now } : v,
+        );
+        leads = state.leads.map((l) =>
+          l.id === existing.leadId
+            ? { ...l, status: 'Won', bookingId: id, updatedAt: now }
+            : l,
+        );
+      } else if (nextStatus === 'Cancelled') {
+        const otherActive = state.bookings.some(
+          (b) =>
+            b.id !== id &&
+            b.vehicleId === existing.vehicleId &&
+            (b.status === 'Booked' || b.status === 'Booking Pending'),
+        );
+        if (!otherActive && vehicle) {
+          vehicles = state.vehicles.map((v) =>
+            v.id === existing.vehicleId && v.availability !== 'Sold'
+              ? { ...v, availability: 'Available', updatedAt: now }
+              : v,
+          );
+        }
+      }
+      const updated = { ...existing, ...patch, status: nextStatus, updatedAt: now };
+      persist({
+        ...state,
+        bookings: state.bookings.map((b) => (b.id === id ? updated : b)),
+        vehicles,
+        leads,
+        auditLogs: appendAudit(state, {
+          actorId: currentUser.id,
+          action: 'booking_updated',
+          recordType: 'booking',
+          recordId: id,
+          detail: nextStatus,
+        }),
+      });
+      return updated;
+    },
+    [currentUser, persist, state],
+  );
+
+  const updateSettings = useCallback(
+    (patch: Partial<CrmSettings>): { ok: true } | { ok: false; error: string } => {
+      if (!currentUser || !canManageSettings(currentUser)) {
+        return { ok: false, error: 'Only administrators can change settings.' };
+      }
+      if (patch.stockAgingDaysThreshold !== undefined && patch.stockAgingDaysThreshold < 1) {
+        return { ok: false, error: 'Stock aging threshold must be at least 1 day.' };
+      }
+      persist({
+        ...state,
+        settings: { ...state.settings, ...patch },
+        auditLogs: appendAudit(state, {
+          actorId: currentUser.id,
+          action: 'settings_updated',
+          recordType: 'settings',
+          recordId: 'crm',
+        }),
+      });
+      return { ok: true };
+    },
+    [currentUser, persist, state],
+  );
+
   const updateUser = useCallback(
     (id: string, patch: Partial<UserInput>): CrmUser | { error: string } => {
       if (!currentUser || currentUser.role !== 'admin') {
@@ -721,6 +1085,38 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     [currentUser, persist, state],
   );
 
+  const deleteUser = useCallback(
+    (id: string): { ok: true } | { ok: false; error: string } => {
+      if (!currentUser || currentUser.role !== 'admin') {
+        return { ok: false, error: 'Only admins can delete users.' };
+      }
+      if (id === currentUser.id) {
+        return { ok: false, error: 'You cannot delete your own account.' };
+      }
+      const existing = state.users.find((u) => u.id === id);
+      if (!existing) return { ok: false, error: 'User not found.' };
+      if (existing.role === 'admin') {
+        const adminCount = state.users.filter((u) => u.role === 'admin').length;
+        if (adminCount <= 1) {
+          return { ok: false, error: 'Cannot delete the last admin account.' };
+        }
+      }
+      persist({
+        ...state,
+        users: state.users.filter((u) => u.id !== id),
+        auditLogs: appendAudit(state, {
+          actorId: currentUser.id,
+          action: 'user_deleted',
+          recordType: 'user',
+          recordId: id,
+          detail: existing.name,
+        }),
+      });
+      return { ok: true };
+    },
+    [currentUser, persist, state],
+  );
+
   const value = useMemo(
     () => ({
       state,
@@ -741,14 +1137,24 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       updateVehicle,
       createUser,
       updateUser,
+      deleteUser,
       findDuplicateMobile,
       bulkAssignLeads,
       deleteLeads,
+      visibleAppointments,
+      visibleBookings,
+      createAppointment,
+      updateAppointment,
+      createBooking,
+      updateBooking,
+      updateSettings,
     }),
     [
       state,
       currentUser,
       visibleLeads,
+      visibleAppointments,
+      visibleBookings,
       login,
       logout,
       resetData,
@@ -764,9 +1170,15 @@ export function CrmProvider({ children }: { children: ReactNode }) {
       updateVehicle,
       createUser,
       updateUser,
+      deleteUser,
       findDuplicateMobile,
       bulkAssignLeads,
       deleteLeads,
+      createAppointment,
+      updateAppointment,
+      createBooking,
+      updateBooking,
+      updateSettings,
     ],
   );
 

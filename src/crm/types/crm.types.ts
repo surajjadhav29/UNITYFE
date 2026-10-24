@@ -1,5 +1,5 @@
-/** Admin = full control · Sales = own leads + create/import · Staff = assigned leads + follow-up only */
-export type UserRole = 'admin' | 'sales' | 'staff';
+/** Form roles: Admin · Sales · Staff (manager kept for legacy seed data) */
+export type UserRole = 'admin' | 'manager' | 'sales' | 'staff';
 
 export type AccountStatus = 'active' | 'inactive';
 
@@ -15,28 +15,31 @@ export interface CrmUser {
 }
 
 export type LeadSource =
-  | 'Phone'
-  | 'WhatsApp'
+  | 'OLX'
+  | 'Cars24'
+  | 'CarWale'
   | 'Website'
+  | 'Phone Call'
   | 'Walk-in'
+  | 'WhatsApp'
   | 'Facebook'
   | 'Instagram'
   | 'Referral'
   | 'Other';
 
 export type LeadStatus =
-  | 'New Lead'
+  | 'New'
   | 'Contacted'
-  | 'Interested'
-  | 'Follow-up Required'
-  | 'Visit Scheduled'
+  | 'Qualified'
+  | 'Visit/Test Drive Scheduled'
+  | 'Test Drive Completed'
   | 'Negotiation'
   | 'Booking'
-  | 'Converted / Sold'
+  | 'Won'
   | 'Lost'
   | 'On Hold';
 
-export type LeadPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+export type LeadPriority = 'Hot' | 'Warm' | 'Cold';
 
 export type LostReason =
   | 'Purchased elsewhere'
@@ -68,7 +71,10 @@ export interface Lead {
   city?: string;
   source: LeadSource;
   preferredCar?: string;
+  /** Max budget (legacy single field). */
   budget?: number;
+  budgetMin?: number;
+  budgetMax?: number;
   preferredYear?: string;
   fuelType?: FuelType;
   transmission?: Transmission;
@@ -78,8 +84,11 @@ export interface Lead {
   status: LeadStatus;
   lostReason?: LostReason;
   lostNotes?: string;
+  onHoldReason?: string;
   remarks?: string;
   interestedVehicleId?: string;
+  /** Set when lead is Won via booking/sale workflow. */
+  bookingId?: string;
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -88,6 +97,8 @@ export interface Lead {
 }
 
 export type VehicleAvailability = 'Available' | 'Reserved' | 'Sold' | 'Inactive';
+
+export type VehicleCondition = 'Excellent' | 'Good' | 'Fair' | 'Needs work';
 
 export interface StockVehicle {
   id: string;
@@ -100,12 +111,20 @@ export interface StockVehicle {
   fuelType: FuelType;
   transmission: Transmission;
   color: string;
+  previousOwners?: number;
+  registrationCity?: string;
+  condition?: VehicleCondition;
+  purchaseDate?: string;
   purchasePrice?: number;
+  refurbishmentCost?: number;
+  otherExpenses?: number;
   sellingPrice: number;
+  minSellingPrice?: number;
   image: string;
-  /** Optional extra photos; share uses first two or front + side image. */
   gallery?: string[];
   description: string;
+  inspectionNotes?: string;
+  addedById?: string;
   availability: VehicleAvailability;
   showOnWebsite: boolean;
   createdAt: string;
@@ -114,7 +133,7 @@ export interface StockVehicle {
 
 export type FollowUpType = 'Call' | 'WhatsApp' | 'Visit' | 'Email' | 'Other';
 
-export type FollowUpStatus = 'Scheduled' | 'Completed' | 'Rescheduled' | 'Cancelled';
+export type FollowUpStatus = 'Pending' | 'Completed' | 'Cancelled';
 
 export interface FollowUp {
   id: string;
@@ -125,6 +144,55 @@ export interface FollowUp {
   notes?: string;
   status: FollowUpStatus;
   outcome?: string;
+  createdById?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AppointmentType = 'Showroom Visit' | 'Test Drive' | 'Delivery' | 'Other';
+
+export type AppointmentStatus =
+  | 'Scheduled'
+  | 'Confirmed'
+  | 'Completed'
+  | 'Cancelled'
+  | 'No-show';
+
+export interface Appointment {
+  id: string;
+  leadId: string;
+  vehicleId?: string;
+  type: AppointmentType;
+  scheduledAt: string;
+  assignedStaffId: string;
+  location?: string;
+  notes?: string;
+  status: AppointmentStatus;
+  outcome?: string;
+  feedback?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BookingStatus = 'Booking Pending' | 'Booked' | 'Cancelled' | 'Sold/Delivered';
+
+export interface Booking {
+  id: string;
+  leadId: string;
+  vehicleId: string;
+  agreedPrice: number;
+  tokenAmount?: number;
+  bookingDate: string;
+  paymentMode?: string;
+  paymentReference?: string;
+  remainingAmount?: number;
+  paymentStatus?: string;
+  deliveryDate?: string;
+  notes?: string;
+  status: BookingStatus;
+  assignedStaffId: string;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -137,7 +205,9 @@ export type ActivityType =
   | 'status_change'
   | 'assignment'
   | 'follow_up'
-  | 'lost_reason';
+  | 'lost_reason'
+  | 'appointment'
+  | 'booking';
 
 export interface LeadActivity {
   id: string;
@@ -154,13 +224,43 @@ export interface AuditLog {
   id: string;
   actorId: string;
   action: string;
-  recordType: 'lead' | 'vehicle' | 'user' | 'auth';
+  recordType: 'lead' | 'vehicle' | 'user' | 'auth' | 'booking' | 'appointment' | 'settings';
   recordId: string;
   detail?: string;
   createdAt: string;
 }
 
+export interface CrmSettings {
+  dealershipName: string;
+  dealershipPhone: string;
+  dealershipAddress: string;
+  leadSources: LeadSource[];
+  leadStatuses: LeadStatus[];
+  stockAgingDaysThreshold: number;
+  defaultFollowUpDays: number;
+}
+
 export interface CrmPersistedState {
+  version: 2;
+  users: CrmUser[];
+  leads: Lead[];
+  vehicles: StockVehicle[];
+  followUps: FollowUp[];
+  appointments: Appointment[];
+  bookings: Booking[];
+  activities: LeadActivity[];
+  auditLogs: AuditLog[];
+  settings: CrmSettings;
+  leadCounter: number;
+}
+
+export interface AuthSession {
+  userId: string;
+  signedInAt: string;
+}
+
+/** Pre-v2 persisted shape (for migration). */
+export interface CrmPersistedStateV1 {
   users: CrmUser[];
   leads: Lead[];
   vehicles: StockVehicle[];
@@ -168,9 +268,4 @@ export interface CrmPersistedState {
   activities: LeadActivity[];
   auditLogs: AuditLog[];
   leadCounter: number;
-}
-
-export interface AuthSession {
-  userId: string;
-  signedInAt: string;
 }

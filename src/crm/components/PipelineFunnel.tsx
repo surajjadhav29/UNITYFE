@@ -15,7 +15,7 @@ export function PipelineFunnel({ counts, total }: PipelineFunnelProps) {
       {LEAD_STATUSES.map((status) => {
         const row = counts.find((c) => c.status === status);
         const count = row?.count ?? 0;
-        if (count === 0 && !['New Lead', 'Contacted', 'Interested', 'Negotiation'].includes(status)) {
+        if (count === 0 && !['New', 'Contacted', 'Qualified', 'Negotiation'].includes(status)) {
           return null;
         }
         const pct = total > 0 ? Math.round((count / total) * 100) : 0;

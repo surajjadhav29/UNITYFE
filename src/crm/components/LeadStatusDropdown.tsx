@@ -1,13 +1,12 @@
 import { type SyntheticEvent } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { LEAD_STATUSES, STATUS_COLORS } from '../constants';
 import type { LeadStatus } from '../types/crm.types';
+import { CrmPickMenu } from './CrmPickMenu';
 
 interface LeadStatusDropdownProps {
   leadId: string;
   status: LeadStatus;
   onChange: (leadId: string, status: LeadStatus) => void;
-  /** Stops kanban card drag when interacting with the control */
   stopDrag?: boolean;
 }
 
@@ -22,31 +21,24 @@ export function LeadStatusDropdown({
     event.stopPropagation();
   }
 
+  const options = LEAD_STATUSES.map((s) => ({
+    value: s,
+    label: s,
+    color: STATUS_COLORS[s],
+  }));
+
   return (
-    <label
-      className="crm-status-dropdown"
-      style={{ backgroundColor: STATUS_COLORS[status] }}
-      onMouseDown={blockDrag}
-      onPointerDown={blockDrag}
-      onDragStart={blockDrag}
-    >
-      <span className="crm-status-dropdown-sr">Change status for {leadId}</span>
-      <select
-        className="crm-status-dropdown-select"
+    <div onMouseDown={blockDrag} onPointerDown={blockDrag}>
+      <CrmPickMenu
         value={status}
-        aria-label={`Status for ${leadId}`}
-        onChange={(e) => {
-          const next = e.target.value as LeadStatus;
+        options={options}
+        size="status"
+        ariaLabel={`Status for ${leadId}`}
+        stopDrag={stopDrag}
+        onChange={(next) => {
           if (next !== status) onChange(leadId, next);
         }}
-      >
-        {LEAD_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={14} className="crm-status-dropdown-icon" aria-hidden />
-    </label>
+      />
+    </div>
   );
 }

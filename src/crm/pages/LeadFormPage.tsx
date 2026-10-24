@@ -22,7 +22,7 @@ import {
   filterAssignableStaff,
 } from '../utils/permissions';
 
-const PRIORITIES: LeadPriority[] = ['Low', 'Medium', 'High', 'Urgent'];
+const PRIORITIES: LeadPriority[] = ['Hot', 'Warm', 'Cold'];
 const TIMELINES: PurchaseTimeline[] = [
   'Immediately',
   'Within 7 days',
@@ -68,9 +68,9 @@ export function LeadFormPage() {
     fuelType: existing?.fuelType ?? '',
     transmission: existing?.transmission ?? '',
     purchaseTimeline: existing?.purchaseTimeline ?? '',
-    priority: (existing?.priority ?? 'Medium') as LeadPriority,
+    priority: (existing?.priority ?? 'Warm') as LeadPriority,
     assignedStaffId: existing?.assignedStaffId ?? currentUser?.id ?? '',
-    status: (existing?.status ?? 'New Lead') as LeadStatus,
+    status: (existing?.status ?? 'New') as LeadStatus,
     lostReason: existing?.lostReason ?? '',
     lostNotes: existing?.lostNotes ?? '',
     remarks: existing?.remarks ?? '',

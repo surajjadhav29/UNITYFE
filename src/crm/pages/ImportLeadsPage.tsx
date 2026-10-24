@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Upload } from 'lucide-react';
+import { CrmTable } from '../common/components/CrmTable';
 import { useCrm } from '../context/CrmContext';
 import { canImportLeads } from '../utils/permissions';
 import type { LeadSource } from '../types/crm.types';
@@ -92,13 +93,13 @@ export function ImportLeadsPage() {
         city: row.city,
         budget: row.budget,
         preferredCar: row.preferredCar,
-        priority: 'Medium',
+        priority: 'Warm',
         assignedStaffId: currentUser!.role === 'admin' ? null : currentUser!.id,
-        status: 'New Lead',
+        status: 'New',
       });
       if (result && typeof result === 'object' && 'id' in result) ok++;
     }
-    setMessage(`${ok} leads imported as New Lead.`);
+    setMessage(`${ok} leads imported as New.`);
     setPreview([]);
   }
 
@@ -108,7 +109,7 @@ export function ImportLeadsPage() {
         <div>
           <h1 className="crm-page-title">Import leads</h1>
           <p className="crm-page-sub">
-            Upload Excel/CSV — new rows appear in <strong>New Lead</strong> (demo: local only)
+            Upload CSV — new rows appear as <strong>New</strong> (stored in this browser)
           </p>
         </div>
       </header>
@@ -137,8 +138,7 @@ export function ImportLeadsPage() {
               View new leads
             </Link>
           </div>
-          <div className="crm-table-wrap">
-            <table className="crm-table">
+          <CrmTable stickyHeader>
               <thead>
                 <tr>
                   <th>Name</th>
@@ -159,8 +159,7 @@ export function ImportLeadsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+          </CrmTable>
         </>
       ) : null}
     </>

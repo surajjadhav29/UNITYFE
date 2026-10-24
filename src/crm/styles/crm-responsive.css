@@ -1,0 +1,429 @@
+/**
+ * Mobile + tablet fixes only.
+ * Desktop (>1024px) is intentionally untouched — every rule lives inside a media query.
+ */
+
+/* ─── Tablet (and below) ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .crm-shell.crm-layout,
+  .crm-shell.crm-layout.crm-layout-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-shell .crm-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    width: 100% !important;
+    height: auto;
+    max-height: none;
+    padding: 0.5rem 0.65rem;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    gap: 0.45rem;
+  }
+
+  .crm-shell .crm-sidebar-head {
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .crm-shell .crm-sidebar-collapse {
+    display: none;
+  }
+
+  .crm-shell .crm-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 0.25rem;
+    padding-bottom: 0.15rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .crm-shell .crm-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .crm-shell .crm-nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .crm-shell .crm-sidebar-footer {
+    display: none;
+  }
+
+  .crm-shell .crm-main-content,
+  .crm-shell .crm-main-content-pro {
+    padding: 0.65rem 0.75rem 1.1rem;
+  }
+
+  /* Leads shell: allow natural scroll on tablet/phone (desktop keeps fixed viewport) */
+  .crm-shell .crm-main:has(> .crm-main-content-pro > .leads-shell) {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .crm-shell .crm-main-content-pro:has(> .leads-shell) {
+    overflow: visible;
+  }
+
+  .crm-shell .leads-shell {
+    min-height: 0;
+    height: auto;
+    flex-direction: column;
+  }
+
+  .crm-shell .leads-body-scroll {
+    overflow: visible;
+  }
+
+  .crm-shell .crm-topbar {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .crm-shell .crm-page-title {
+    font-size: 1.3rem;
+    line-height: 1.25;
+  }
+
+  .crm-shell .crm-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .crm-shell .crm-actions .crm-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 2.4rem;
+  }
+
+  .crm-shell .crm-detail-grid,
+  .crm-shell .crm-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-shell .crm-form-grid .span2,
+  .crm-shell .crm-form-grid .crm-span-2 {
+    grid-column: span 1;
+  }
+
+  .crm-shell .crm-dl {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 0.45rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  .crm-shell .crm-summary-stock-select {
+    font-size: 0.8rem;
+    padding: 0.6rem 2.1rem 0.6rem 0.7rem;
+  }
+
+  .crm-shell .crm-summary-fu-scroll,
+  .crm-shell .crm-summary-activity .crm-summary-fu-scroll {
+    max-height: 180px;
+  }
+
+  .crm-shell .crm-table-wrap,
+  .crm-shell .crm-table-grid-wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .crm-shell table.crm-table-grid,
+  .crm-shell .crm-table {
+    min-width: 720px;
+  }
+
+  .crm-shell .crm-filters {
+    gap: 0.5rem;
+  }
+
+  .crm-shell .crm-filters input,
+  .crm-shell .crm-filters select {
+    min-width: 0;
+    flex: 1 1 140px;
+  }
+
+  .crm-shell .crm-grid-cards,
+  .crm-shell .fu-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-shell .ld-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .crm-shell .ld-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .crm-shell .ld-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .crm-shell .ld-toolbar {
+    gap: 0.45rem;
+  }
+
+  .crm-shell .ld-toolbar-search {
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .crm-shell .ld-toolbar-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .crm-shell .ld-filters-rail.is-open {
+    width: min(100%, 360px);
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    min-height: 100vh;
+    height: 100vh;
+    box-shadow: -8px 0 28px rgba(15, 23, 42, 0.14);
+  }
+
+  .crm-shell .ld-kpi-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .crm-shell .dn-date-filters {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .crm-shell .dn-vehicle-list li {
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .crm-shell .dn-vehicle-list li > :last-child {
+    grid-column: 2;
+  }
+
+  .crm-shell .crm-contact-submit {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .crm-shell .crm-outcome-chips,
+  .crm-shell .crm-day-presets {
+    gap: 0.35rem;
+  }
+
+  .crm-shell .fu-note {
+    max-width: none;
+  }
+}
+
+/* ─── Mobile phones ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .crm-shell .crm-main-content,
+  .crm-shell .crm-main-content-pro {
+    padding: 0.55rem 0.6rem 1rem;
+  }
+
+  .crm-shell .crm-page-title {
+    font-size: 1.15rem;
+  }
+
+  .crm-shell .crm-page-sub {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .crm-shell .crm-topbar.crm-topbar-pro {
+    padding: 0.4rem 0.6rem;
+  }
+
+  .crm-shell .crm-topbar-user-text {
+    display: none;
+  }
+
+  .crm-shell .crm-sidebar-brand-text {
+    display: none;
+  }
+
+  .crm-shell .crm-nav-link {
+    padding: 0.4rem 0.55rem;
+    font-size: 0.75rem;
+  }
+
+  .crm-shell .crm-nav-label {
+    max-width: 7.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .crm-shell .crm-actions .crm-btn {
+    flex: 1 1 calc(50% - 0.25rem);
+    padding: 0.5rem 0.55rem;
+    font-size: 0.8rem;
+  }
+
+  .crm-shell .crm-panel {
+    padding: 0.85rem;
+    border-radius: 12px;
+  }
+
+  .crm-shell .crm-dl {
+    grid-template-columns: 1fr;
+    gap: 0.15rem 0;
+  }
+
+  .crm-shell .crm-dl dt {
+    margin-top: 0.45rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .crm-shell .crm-dl dt:first-child {
+    margin-top: 0;
+  }
+
+  .crm-shell .crm-dl dd {
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .crm-shell .crm-summary-stock {
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+  }
+
+  .crm-shell .crm-summary-stack {
+    gap: 0.65rem;
+    margin-top: 0.65rem;
+  }
+
+  .crm-shell .crm-summary-fu-scroll,
+  .crm-shell .crm-summary-activity .crm-summary-fu-scroll {
+    max-height: 160px;
+  }
+
+  .crm-shell .crm-contact-section {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .crm-shell .crm-field input,
+  .crm-shell .crm-field select,
+  .crm-shell .crm-field textarea {
+    font-size: 16px; /* avoid iOS zoom */
+  }
+
+  .crm-shell .crm-summary-stock-select {
+    font-size: 16px;
+  }
+
+  .crm-shell .crm-grid-cards,
+  .crm-shell .fu-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .crm-shell .crm-stat-card {
+    padding: 0.75rem;
+    border-radius: 10px;
+  }
+
+  .crm-shell .crm-stat-value {
+    font-size: 1.35rem;
+  }
+
+  .crm-shell table.crm-table-grid,
+  .crm-shell .crm-table {
+    min-width: 640px;
+  }
+
+  .crm-shell table.crm-table-grid .crm-table-grid-th,
+  .crm-shell table.crm-table-grid thead th,
+  .crm-shell table.crm-table-grid .crm-table-grid-td,
+  .crm-shell table.crm-table-grid tbody td {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .crm-shell .ld-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-shell .ld-filters-rail.is-open {
+    width: 100%;
+    left: 0;
+  }
+
+  .crm-shell .ld-page-head h1 {
+    font-size: 1.2rem;
+  }
+
+  .crm-shell .ld-bulk-bar {
+    flex-wrap: wrap;
+  }
+
+  .crm-shell .dn-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .crm-shell .dn-activity-list li {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .crm-shell .dn-vehicle-list li {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .crm-shell .dn-vehicle-thumb {
+    width: 44px;
+    height: 34px;
+  }
+
+  .crm-shell .dn-stock-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-shell .dn-bar-sales-summary {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .crm-shell .crm-alert {
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+}
+
+/* ─── Narrow phones ─────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .crm-shell .crm-actions .crm-btn {
+    flex: 1 1 100%;
+  }
+
+  .crm-shell .crm-grid-cards,
+  .crm-shell .fu-kpi,
+  .crm-shell .dn-kpi-grid,
+  .crm-shell .ld-kpi-strip {
+    grid-template-columns: 1fr;
+  }
+}

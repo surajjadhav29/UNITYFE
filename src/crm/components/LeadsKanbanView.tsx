@@ -1,40 +1,59 @@
 import { useMemo, useState, type DragEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { GripVertical, Phone } from 'lucide-react';
-import { LEAD_STATUSES, STATUS_COLORS } from '../constants';
+import { GripVertical } from 'lucide-react';
+import { STATUS_COLORS } from '../constants';
 import type { Lead, LeadStatus } from '../types/crm.types';
-import { formatINR } from '../../utils/format';
-import { LeadStatusDropdown } from './LeadStatusDropdown';
-import { LeadWhatsAppButton } from './LeadWhatsAppButton';
+import { formatLeadBudget } from '../utils/leadFormat';
+import { LeadAvatar } from './leads/LeadAvatar';
+import { LeadSourceBadge } from './leads/LeadSourceBadge';
+import { LeadPriorityDropdown } from './LeadPriorityDropdown';
+import type { LeadPriority } from '../types/crm.types';
+import { isOverdue } from '../utils/followUpDue';
+
+const KANBAN_STATUSES: LeadStatus[] = [
+  'New',
+  'Contacted',
+  'Qualified',
+  'Visit/Test Drive Scheduled',
+  'Test Drive Completed',
+  'Negotiation',
+  'Booking',
+  'Won',
+  'Lost',
+];
 
 interface LeadsKanbanViewProps {
   leads: Lead[];
   getStaffName: (staffId: string | null) => string;
   onStatusChange: (leadId: string, status: LeadStatus) => void;
+  onPriorityChange?: (leadId: string, priority: LeadPriority) => void;
   bulkSelect?: boolean;
   selectedIds?: string[];
   onToggleSelect?: (leadId: string) => void;
-  onWhatsApp?: (lead: Lead) => void;
+  onSelectLead?: (lead: Lead) => void;
+  selectedLeadId?: string | null;
 }
 
 export function LeadsKanbanView({
   leads,
   getStaffName,
   onStatusChange,
+  onPriorityChange,
   bulkSelect = false,
   selectedIds = [],
   onToggleSelect,
-  onWhatsApp,
+  onSelectLead,
+  selectedLeadId,
 }: LeadsKanbanViewProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overColumn, setOverColumn] = useState<LeadStatus | null>(null);
 
   const byStatus = useMemo(() => {
     const map = new Map<LeadStatus, Lead[]>();
-    for (const s of LEAD_STATUSES) map.set(s, []);
+    for (const s of KANBAN_STATUSES) map.set(s, []);
     for (const lead of leads) {
-      const list = map.get(lead.status);
-      if (list) list.push(lead);
+      const col = KANBAN_STATUSES.includes(lead.status) ? lead.status : 'New';
+      map.get(col)!.push(lead);
     }
     return map;
   }, [leads]);
@@ -69,109 +88,98 @@ export function LeadsKanbanView({
   }
 
   return (
-    <div className="crm-kanban-scroll" role="region" aria-label="Leads board">
-      <div className="crm-kanban-board">
-        {LEAD_STATUSES.map((status) => {
+    <div className="ld-kanban-scroll" role="region" aria-label="Leads kanban board">
+      <div className="ld-kanban-board">
+        {KANBAN_STATUSES.map((status) => {
           const columnLeads = byStatus.get(status) ?? [];
           const isOver = overColumn === status;
           return (
             <div
               key={status}
-              className={`crm-kanban-column${isOver ? ' crm-kanban-column-over' : ''}`}
+              className={`ld-kanban-col${isOver ? ' ld-kanban-col-over' : ''}`}
               onDragOver={(e) => onColumnDragOver(status, e)}
               onDragLeave={() => setOverColumn((c) => (c === status ? null : c))}
               onDrop={(e) => onColumnDrop(status, e)}
             >
               <header
-                className="crm-kanban-column-head"
+                className="ld-kanban-col-head"
                 style={{ borderTopColor: STATUS_COLORS[status] }}
               >
-                <span className="crm-kanban-column-title">{status}</span>
-                <span className="crm-kanban-column-count">{columnLeads.length}</span>
+                <span>{status}</span>
+                <span>{columnLeads.length}</span>
               </header>
-              <div className="crm-kanban-column-body">
+              <div className="ld-kanban-col-body">
                 {columnLeads.length === 0 ? (
-                  <p className="crm-kanban-placeholder">Drop leads here</p>
+                  <p className="ld-kanban-drop-hint">Drop leads here</p>
                 ) : (
                   columnLeads.map((lead) => {
                     const overdue =
                       lead.nextFollowUpAt &&
-                      new Date(lead.nextFollowUpAt).getTime() < Date.now() &&
-                      !['Converted / Sold', 'Lost'].includes(lead.status);
+                      isOverdue(lead.nextFollowUpAt) &&
+                      !['Won', 'Lost'].includes(lead.status);
                     const isDragging = draggingId === lead.id;
+                    const isSelected = selectedLeadId === lead.id;
                     return (
                       <article
                         key={lead.id}
-                        className={`crm-kanban-card${isDragging ? ' crm-kanban-card-dragging' : ''}${selectedIds.includes(lead.id) ? ' crm-kanban-card-selected' : ''}`}
+                        className={`ld-kanban-card${isDragging ? ' ld-kanban-card-dragging' : ''}${isSelected ? ' ld-row-selected' : ''}`}
                         draggable
                         onDragStart={(e) => onDragStart(lead.id, e)}
                         onDragEnd={onDragEnd}
+                        onClick={() => onSelectLead?.(lead)}
                       >
-                        <div className="crm-kanban-card-top">
+                        <div className="ld-kanban-card-top">
                           {bulkSelect && onToggleSelect ? (
                             <input
                               type="checkbox"
-                              className="crm-kanban-check"
                               checked={selectedIds.includes(lead.id)}
                               onChange={() => onToggleSelect(lead.id)}
-                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
                               aria-label={`Select ${lead.id}`}
                             />
                           ) : (
-                            <GripVertical
-                              size={16}
-                              className="crm-kanban-grip"
-                              aria-hidden
-                            />
+                            <GripVertical size={16} className="crm-kanban-grip" aria-hidden />
                           )}
-                          <div className="crm-kanban-card-meta">
-                            <Link to={`/admin/leads/${lead.id}`} className="crm-kanban-name">
-                              {lead.customerName}
-                            </Link>
-                            <span className="crm-kanban-id">{lead.id}</span>
+                          <LeadAvatar name={lead.customerName} size={32} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <h4>
+                              <Link
+                                to={`/admin/leads/${lead.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {lead.customerName}
+                              </Link>
+                            </h4>
+                            <span className="ld-kanban-card-meta">{lead.id}</span>
                           </div>
-                          {onWhatsApp ? (
-                            <LeadWhatsAppButton
-                              label={`Share car with ${lead.customerName}`}
-                              onClick={() => onWhatsApp(lead)}
+                          {onPriorityChange ? (
+                            <LeadPriorityDropdown
+                              leadId={lead.id}
+                              priority={lead.priority}
+                              onChange={onPriorityChange}
                               stopDrag
                             />
                           ) : null}
                         </div>
-                        <div className="crm-kanban-card-row">
-                          <Phone size={14} aria-hidden />
-                          {lead.mobile}
+                        <div style={{ marginBottom: '0.35rem' }}>
+                          <LeadSourceBadge source={lead.source} />
                         </div>
-                        <LeadStatusDropdown
-                          leadId={lead.id}
-                          status={lead.status}
-                          onChange={onStatusChange}
-                          stopDrag
-                        />
-                        <div className="crm-kanban-card-tags">
-                          <span className="crm-kanban-tag">{lead.source}</span>
-                          {lead.budget ? (
-                            <span className="crm-kanban-tag">{formatINR(lead.budget)}</span>
-                          ) : null}
-                        </div>
-                        <div className="crm-kanban-card-foot">
-                          <span>{getStaffName(lead.assignedStaffId)}</span>
-                          {lead.nextFollowUpAt ? (
-                            <span className={overdue ? 'crm-kanban-overdue' : undefined}>
-                              {overdue ? 'Overdue · ' : ''}
-                              {new Date(lead.nextFollowUpAt).toLocaleDateString('en-IN', {
-                                day: 'numeric',
-                                month: 'short',
-                              })}
-                            </span>
-                          ) : null}
-                        </div>
-                        <Link
-                          to={`/admin/leads/${lead.id}/edit`}
-                          className="crm-kanban-edit"
-                        >
-                          Edit
-                        </Link>
+                        <p style={{ margin: '0 0 0.35rem', fontSize: '0.82rem' }}>{lead.mobile}</p>
+                        <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
+                          {formatLeadBudget(lead)} · {getStaffName(lead.assignedStaffId)}
+                        </p>
+                        {lead.nextFollowUpAt ? (
+                          <p
+                            className={overdue ? 'ld-follow-due' : undefined}
+                            style={{ margin: '0.35rem 0 0', fontSize: '0.75rem' }}
+                          >
+                            {overdue ? 'Overdue · ' : ''}
+                            {new Date(lead.nextFollowUpAt).toLocaleString('en-IN', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })}
+                          </p>
+                        ) : null}
                       </article>
                     );
                   })

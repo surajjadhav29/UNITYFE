@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CARS } from '../../data/cars';
+import { useWebsiteStock } from '../../hooks/useWebsiteStock';
 import type {
   BudgetRange,
   CarCategoryFilter,
@@ -43,11 +43,12 @@ export function AvailableCars({
 
   const [category, setCategory] = useState<CarCategoryFilter>('All Cars');
   const [sort, setSort] = useState<PriceSort>('none');
+  const stock = useWebsiteStock();
 
   const cars = useMemo(() => {
     const query = initialQuery.trim().toLowerCase();
 
-    const filtered = CARS.filter((car) => {
+    const filtered = stock.filter((car) => {
       const matchesCategory =
         category === 'All Cars' || car.bodyType === category;
       const matchesQuery =
@@ -65,7 +66,7 @@ export function AvailableCars({
       return [...filtered].sort((a, b) => b.price - a.price);
     }
     return filtered;
-  }, [budget, category, initialQuery, sort]);
+  }, [budget, category, initialQuery, sort, stock]);
 
   return (
     <section

@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+import { CrmTable } from '../common/components/CrmTable';
 import { useCrm } from '../context/CrmContext';
 import { canManageStock } from '../utils/permissions';
 import { VehicleStatusBadge } from '../components/StatusBadge';
 import { formatINR, formatKilometres } from '../../utils/format';
 import type { VehicleAvailability } from '../types/crm.types';
-import { countLeadsForVehicle, stockDaysListed } from '../utils/leadInsights';
+import { leadStatsForVehicle, stockDaysListed } from '../utils/leadInsights';
 
 export function VehiclesPage() {
   const { state, updateVehicle, currentUser } = useCrm();
@@ -67,8 +68,7 @@ export function VehiclesPage() {
         </select>
       </div>
 
-      <div className="crm-table-wrap">
-        <table className="crm-table">
+      <CrmTable stickyHeader>
           <thead>
             <tr>
               <th>Vehicle</th>
@@ -76,7 +76,7 @@ export function VehiclesPage() {
               <th>Price</th>
               <th>Availability</th>
               <th>Days on lot</th>
-              <th>Leads linked</th>
+              <th>Leads on this car</th>
               <th>Website</th>
               <th />
             </tr>
@@ -115,7 +115,21 @@ export function VehiclesPage() {
                     {stockDaysListed(v)}d
                   </span>
                 </td>
-                <td>{countLeadsForVehicle(v.id, state.leads)}</td>
+                <td>
+                  {(() => {
+                    const s = leadStatsForVehicle(v.id, state.leads);
+                    if (s.total === 0) return '—';
+                    return (
+                      <span className="crm-stock-leads-cell">
+                        <strong>{s.open}</strong> open
+                        {s.hot > 0 ? (
+                          <span className="crm-stock-leads-hot"> · Hot {s.hot}</span>
+                        ) : null}
+                        <span className="crm-stock-leads-total"> ({s.total} total)</span>
+                      </span>
+                    );
+                  })()}
+                </td>
                 <td>
                   <label style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                     <input
@@ -134,9 +148,8 @@ export function VehiclesPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+      </CrmTable>
         {filtered.length === 0 ? <p className="crm-empty">No vehicles found.</p> : null}
-      </div>
     </>
   );
 }

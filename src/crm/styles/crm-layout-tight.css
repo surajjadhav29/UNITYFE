@@ -1,0 +1,415 @@
+/* White, compact CRM shell — all admin modules */
+
+.crm-shell.crm-root,
+.crm-root.crm-layout {
+  --crm-bg: #ffffff;
+  --crm-surface: #ffffff;
+  --crm-border: #e5e7eb;
+  --crm-border-soft: #eef0f3;
+  --crm-sidebar: 236px;
+  --crm-sidebar-collapsed: 68px;
+  background: #fff;
+}
+
+.crm-shell .crm-main {
+  padding: 0;
+  background: #fff;
+}
+
+.crm-main-content,
+.crm-main-content-pro {
+  padding: 0.65rem 0.85rem 1rem;
+  background: #fff;
+}
+
+.crm-main:has(> .crm-main-content-pro > .leads-shell) {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.crm-main-content-pro:has(> .leads-shell) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0.65rem;
+}
+
+.crm-topbar.crm-topbar-pro,
+.crm-shell .crm-topbar {
+  padding: 0.45rem 0.85rem;
+  margin-bottom: 0;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid var(--crm-border);
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.crm-topbar-search,
+.crm-topbar-pro .crm-topbar-search {
+  box-shadow: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+}
+
+.crm-topbar-user {
+  padding: 0.25rem 0.55rem 0.25rem 0.25rem;
+}
+
+.crm-shell .crm-sidebar {
+  padding: 0.65rem 0.55rem;
+  gap: 0.35rem;
+  box-shadow: none;
+}
+
+.crm-sidebar-brand {
+  padding: 0.25rem 0.35rem 0.65rem;
+  margin-bottom: 0;
+}
+
+.crm-shell .crm-nav {
+  gap: 0.35rem;
+}
+
+.crm-shell .crm-nav-link {
+  padding: 0.52rem 0.6rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+
+.crm-page-header {
+  margin-bottom: 0.65rem;
+  gap: 0.65rem;
+}
+
+.crm-page-header h1 {
+  font-size: 1.35rem;
+  margin-bottom: 0.2rem;
+}
+
+.crm-page-title {
+  font-size: 1.35rem;
+}
+
+.crm-topbar {
+  margin-bottom: 0.65rem;
+}
+
+.crm-grid-cards {
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.crm-stat-card {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.crm-stat-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.crm-stat-value {
+  font-size: 1.45rem;
+  margin-top: 0.2rem;
+}
+
+.crm-panel {
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.65rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.crm-panel-title {
+  margin-bottom: 0.55rem;
+}
+
+.crm-filters {
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.55rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.crm-table-wrap {
+  border-radius: 8px;
+  box-shadow: none;
+  border-color: var(--crm-border);
+}
+
+.crm-table th,
+.crm-table td {
+  padding: 0.45rem 0.6rem;
+}
+
+.crm-table th {
+  background: #f9fafb;
+  font-size: 0.68rem;
+}
+
+.crm-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.crm-table tbody tr:hover {
+  background: #f3f4f6;
+}
+
+.crm-bulk-bar {
+  padding: 0.55rem 0.65rem;
+  margin-bottom: 0.55rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.crm-kanban-board {
+  gap: 0.55rem;
+}
+
+.crm-kanban-column {
+  border-radius: 8px;
+  box-shadow: none;
+  background: #fafafa;
+}
+
+.crm-kanban-column-head {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.crm-kanban-column-body {
+  padding: 0.45rem;
+  gap: 0.45rem;
+}
+
+.crm-kanban-card {
+  border-radius: 8px;
+  padding: 0.55rem 0.6rem;
+  box-shadow: none;
+}
+
+.crm-kanban-card:hover {
+  box-shadow: none;
+  border-color: #d1d5db;
+}
+
+.crm-btn-primary:hover {
+  transform: none;
+}
+
+.crm-dash-hero {
+  margin-bottom: 0.75rem;
+  padding: 1rem 1.15rem;
+  border-radius: 8px;
+}
+
+.crm-dash-kpis {
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.crm-dash-kpi {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.crm-dash-main-grid {
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.crm-dash-queue {
+  padding: 0.85rem 0.95rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.crm-dash-side {
+  gap: 0.65rem;
+}
+
+.dn-dashboard {
+  max-width: none;
+}
+
+.dn-dashboard-head {
+  margin-bottom: 0.65rem;
+}
+
+.dn-dashboard-head h1 {
+  font-size: 1.35rem;
+}
+
+.dn-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.dn-kpi {
+  padding: 0.75rem 0.85rem;
+  border-radius: 8px;
+  box-shadow: none;
+  gap: 0.65rem;
+  min-height: 84px;
+}
+
+.dn-kpi-link:hover .dn-kpi,
+.dn-kpi:hover {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.dn-kpi-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+}
+
+.dn-kpi-value {
+  font-size: 1.55rem;
+}
+
+@media (max-width: 1024px) {
+  .dn-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dn-charts-row,
+.dn-tables-row,
+.dn-bottom-row {
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.dn-card {
+  border-radius: 8px;
+  box-shadow: none;
+  border-color: var(--crm-border);
+}
+
+.dn-card-head {
+  padding: 0.65rem 0.85rem 0.35rem;
+}
+
+.dn-card-body {
+  padding: 0.35rem 0.85rem 0.75rem;
+}
+
+.dn-table td {
+  padding: 0.45rem 0.5rem;
+}
+
+.leads-shell {
+  min-height: calc(100vh - 96px);
+}
+
+.ld-page-head {
+  margin-bottom: 0.55rem;
+}
+
+.ld-page-head h1 {
+  font-size: 1.35rem;
+}
+
+.ld-kpi-strip {
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
+.ld-kpi-mini {
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+}
+
+.ld-leads-chrome {
+  margin-bottom: 0.55rem;
+}
+
+.ld-toolbar-main {
+  margin-bottom: 0.45rem;
+  border-radius: 8px;
+}
+
+.ld-tabs {
+  padding: 0 0.25rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.ld-tab {
+  padding: 0.55rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.ld-toolbar {
+  padding: 0.5rem 0.6rem;
+}
+
+.ld-table-wrap {
+  border-radius: 8px;
+}
+
+.ld-table th {
+  padding: 0.45rem 0.6rem;
+  background: #f9fafb;
+}
+
+.ld-table td {
+  padding: 0.45rem 0.6rem;
+}
+
+.ld-pagination {
+  padding: 0.5rem 0.75rem;
+}
+
+.ld-panel {
+  box-shadow: none;
+  top: 56px;
+}
+
+.ld-panel-head {
+  padding: 0.75rem 0.85rem;
+}
+
+.ld-panel-section {
+  padding: 0.65rem 0.85rem;
+}
+
+.ld-kanban-board {
+  gap: 0.55rem;
+}
+
+.ld-kanban-col {
+  flex: 0 0 260px;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid var(--crm-border);
+}
+
+.ld-kanban-col-head {
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.ld-kanban-card {
+  padding: 0.55rem 0.6rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.ld-kanban-card:hover {
+  box-shadow: none;
+}
+
+.ld-bulk-bar {
+  margin-bottom: 0.55rem;
+  padding: 0.5rem 0.6rem;
+}

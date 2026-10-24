@@ -25,7 +25,7 @@ function daysSince(iso: string | undefined, now = Date.now()): number {
 }
 
 function isNewLead(lead: Lead, now = Date.now()): boolean {
-  return daysSince(lead.createdAt, now) <= 1 && lead.status === 'New Lead';
+  return daysSince(lead.createdAt, now) <= 1 && lead.status === 'New';
 }
 
 export function getNeedsAttention(
@@ -47,13 +47,13 @@ export function getNeedsAttention(
   }
 
   for (const lead of leads) {
-    if (['Converted / Sold', 'Lost'].includes(lead.status)) continue;
+    if (['Won', 'Lost'].includes(lead.status)) continue;
 
     if (!lead.assignedStaffId) add(lead, 'unassigned', 70);
 
     if (isNewLead(lead, nowMs) && !lead.lastContactAt) {
       add(lead, 'new_uncontacted', 90);
-      if (lead.priority === 'Urgent' || lead.priority === 'High') {
+      if (lead.priority === 'Hot') {
         add(lead, 'hot_new', 95);
       }
     }
@@ -70,9 +70,9 @@ export function getNeedsAttention(
   }
 
   for (const f of followUps) {
-    if (f.status !== 'Scheduled') continue;
+    if (f.status !== 'Pending') continue;
     const lead = leads.find((l) => l.id === f.leadId);
-    if (!lead || ['Converted / Sold', 'Lost'].includes(lead.status)) continue;
+    if (!lead || ['Won', 'Lost'].includes(lead.status)) continue;
     if (isOverdue(f.scheduledAt, now)) add(lead, 'overdue_follow_up', 100);
     else if (isToday(f.scheduledAt, now)) add(lead, 'due_today', 85);
   }
@@ -127,7 +127,7 @@ export function matchVehiclesForLead(
   limit = 5,
 ): StockVehicle[] {
   const available = vehicles.filter((v) => v.availability === 'Available');
-  const budget = lead.budget;
+  const budget = lead.budgetMax ?? lead.budget;
   const pref = (lead.preferredCar ?? '').toLowerCase();
   const prefYear = lead.preferredYear;
 
@@ -164,6 +164,28 @@ export function stockDaysListed(vehicle: StockVehicle): number {
 
 export function countLeadsForVehicle(vehicleId: string, leads: Lead[]): number {
   return leads.filter((l) => l.interestedVehicleId === vehicleId).length;
+}
+
+export function countHotLeadsForVehicle(vehicleId: string, leads: Lead[]): number {
+  return leads.filter(
+    (l) =>
+      l.interestedVehicleId === vehicleId &&
+      l.priority === 'Hot' &&
+      !['Won', 'Lost'].includes(l.status),
+  ).length;
+}
+
+export function leadStatsForVehicle(
+  vehicleId: string,
+  leads: Lead[],
+): { total: number; hot: number; open: number } {
+  const linked = leads.filter((l) => l.interestedVehicleId === vehicleId);
+  const open = linked.filter((l) => !['Won', 'Lost'].includes(l.status));
+  return {
+    total: linked.length,
+    open: open.length,
+    hot: open.filter((l) => l.priority === 'Hot').length,
+  };
 }
 
 export function exportLeadsToCsv(leads: Lead[], getStaffName: (id: string | null) => string): string {

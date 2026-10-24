@@ -9,6 +9,24 @@ export function LeadStatusBadge({ status }: { status: LeadStatus }) {
   );
 }
 
+export function StatusBadge({
+  label,
+  tone = 'neutral',
+}: {
+  label: string;
+  tone?: 'ok' | 'warn' | 'neutral' | 'danger';
+}) {
+  const cls =
+    tone === 'ok'
+      ? 'crm-badge-success'
+      : tone === 'warn'
+        ? 'crm-badge-warning'
+        : tone === 'danger'
+          ? 'crm-badge-danger'
+          : 'crm-badge-muted';
+  return <span className={`crm-badge ${cls}`}>{label}</span>;
+}
+
 export function VehicleStatusBadge({ status }: { status: VehicleAvailability }) {
   const map: Record<VehicleAvailability, string> = {
     Available: 'crm-badge-success',

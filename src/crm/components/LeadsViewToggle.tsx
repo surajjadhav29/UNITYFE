@@ -28,10 +28,10 @@ interface LeadsViewToggleProps {
 
 export function LeadsViewToggle({ mode, onChange }: LeadsViewToggleProps) {
   return (
-    <div className="crm-view-toggle" role="group" aria-label="Leads view">
+    <div className="ld-view-toggle" role="group" aria-label="Leads view">
       <button
         type="button"
-        className={`crm-view-toggle-btn${mode === 'table' ? ' active' : ''}`}
+        className={mode === 'table' ? 'active' : undefined}
         onClick={() => onChange('table')}
         aria-pressed={mode === 'table'}
       >
@@ -40,12 +40,12 @@ export function LeadsViewToggle({ mode, onChange }: LeadsViewToggleProps) {
       </button>
       <button
         type="button"
-        className={`crm-view-toggle-btn${mode === 'card' ? ' active' : ''}`}
+        className={mode === 'card' ? 'active' : undefined}
         onClick={() => onChange('card')}
         aria-pressed={mode === 'card'}
       >
         <LayoutGrid size={16} aria-hidden />
-        Cards
+        Kanban
       </button>
     </div>
   );

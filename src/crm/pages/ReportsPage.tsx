@@ -21,7 +21,7 @@ export function ReportsPage() {
   if (!currentUser || !canViewReports(currentUser)) {
     return <Navigate to="/admin/dashboard" replace />;
   }
-  const converted = visibleLeads.filter((l) => l.status === 'Converted / Sold').length;
+  const converted = visibleLeads.filter((l) => l.status === 'Won').length;
   const lost = visibleLeads.filter((l) => l.status === 'Lost').length;
   const closed = converted + lost;
   const rate = closed === 0 ? 0 : Math.round((converted / closed) * 100);

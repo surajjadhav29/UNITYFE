@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { CrmTable } from '../common/components/CrmTable';
 import { AlertCircle, MessageCircle, Phone } from 'lucide-react';
 import type { NeedsAttentionItem } from '../utils/leadInsights';
 import { attentionReasonLabel } from '../utils/leadInsights';
@@ -82,8 +83,7 @@ export function DashboardTodayQueue({
       <p className="crm-dash-queue-sub">
         Who to contact first — based on overdue follow-ups and dealer CRM priority rules.
       </p>
-      <div className="crm-dash-queue-table-wrap">
-        <table className="crm-dash-queue-table">
+      <CrmTable variant="embedded" wrapClassName="crm-dash-queue-table-wrap" stickyHeader>
           <thead>
             <tr>
               <th>Customer</th>
@@ -132,8 +132,7 @@ export function DashboardTodayQueue({
               </tr>
             ))}
           </tbody>
-        </table>
-      </div>
+      </CrmTable>
       <Link to="/admin/follow-ups" className="crm-link crm-dash-queue-more">
         View all follow-ups →
       </Link>

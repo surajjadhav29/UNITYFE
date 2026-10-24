@@ -2,7 +2,7 @@
 
 .crm-root {
   --crm-sidebar: 260px;
-  --crm-bg: #f1f5f9;
+  --crm-bg: #ffffff;
   --crm-surface: #ffffff;
   --crm-border: #e2e8f0;
   --crm-border-soft: #eef2f6;
@@ -98,19 +98,18 @@
 }
 
 .crm-main {
-  padding: 1.5rem clamp(1rem, 2.5vw, 2rem) 2.5rem;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.04), transparent 35%),
-    var(--crm-bg);
+  padding: 0;
+  background: var(--crm-bg);
 }
 
 .crm-topbar {
   background: var(--crm-surface);
-  border: 1px solid var(--crm-border-soft);
-  border-radius: var(--crm-radius-lg);
-  padding: 1.15rem 1.35rem;
-  box-shadow: var(--crm-shadow-sm);
-  margin-bottom: 1rem;
+  border: none;
+  border-bottom: 1px solid var(--crm-border-soft);
+  border-radius: 0;
+  padding: 0.45rem 0.85rem;
+  box-shadow: none;
+  margin-bottom: 0;
 }
 
 .crm-page-title {
